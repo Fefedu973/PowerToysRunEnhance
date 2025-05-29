@@ -15,7 +15,6 @@ if ($null -eq $env:UPX) {
 
 # 创建并激活虚拟环境
 Write-Host "正在创建和激活虚拟环境..."
-ss
 if ($null -ne $env:PYTHON ) {
     uv venv --python $env:PYTHON
 } else {
