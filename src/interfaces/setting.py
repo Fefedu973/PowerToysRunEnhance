@@ -1,4 +1,4 @@
-from os import PathLike
+from os import PathLike, path
 
 from PySide6.QtCore import Qt, QObject, Signal
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QFrame
@@ -18,7 +18,7 @@ from qfluentwidgets import (
     ComboBox,
     DoubleSpinBox,
 )
-from tomlkit import toml_file
+from tomlkit import toml_file, parse
 
 VK_TO_KEY_NAME = {
     # 修饰键
@@ -379,7 +379,18 @@ class BaseConfig(QObject):
     def __init__(self, toml_file_path: str | PathLike[str]):
         super().__init__()
         self.toml_file_path = toml_file_path
-        self.config = toml_file.TOMLFile(toml_file_path).read()
+        if path.isfile(toml_file_path):
+            with open(toml_file_path, "r", encoding="utf-8") as f:
+                toml_content = f.read()
+        else:
+            toml_content = """
+                            [settings]
+                            detectionMethods = 0
+                            inputMethods = 0
+                            powerToysRunShortCut = "Alt+Space"
+                            autoFocus = true
+                            """
+        self.config = parse(toml_content)
 
     def set(self, key, value):
         keys = key.split(".")
