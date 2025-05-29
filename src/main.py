@@ -28,6 +28,7 @@ from PySide6.QtWidgets import QApplication, QSystemTrayIcon
 from loguru import logger
 from pynput import keyboard
 from pynput.keyboard import Controller, Key, KeyCode
+from pywinauto import timings
 from pywinauto.findwindows import ElementNotFoundError
 from qfluentwidgets import (
     FluentIcon,
@@ -113,6 +114,7 @@ class InputDetectionNext(QThread):
 
     def __init__(self):
         super().__init__()
+        self.start_timestamp = None
         self.target_window = None
         self.is_listening = False
         self.hwnd = None
@@ -152,7 +154,10 @@ class InputDetectionNext(QThread):
                 data.flags == 0 则为物理按下键
                 """
                 process_name = get_process_name(win32gui.GetForegroundWindow())
-                if self.target_process_starting is not True:
+                if (
+                    self.target_process_starting is True
+                    and (time.time() - self.start_timestamp) > 1
+                ):
                     if (
                         "SearchHost.exe" not in process_name
                         and "SearchUI.exe" not in process_name
@@ -195,6 +200,8 @@ class InputDetectionNext(QThread):
                         # time.sleep(CONFIG.get("settings.waitTime", 0.5))
                         self.open_powertoys_run = OpenPowertoysRun()
                         self.open_powertoys_run.run()
+                        self.start_timestamp: float = time.time()
+
                 logger.debug(
                     f"按键{vkcode_to_vk_name(data.vkCode)}被阻止,flags={data.flags},msg={msg}"
                 )
@@ -209,15 +216,15 @@ class InputDetectionNext(QThread):
         logger.debug("powertoys_launcher_started 信号已接收")
         if self.target_process_starting:
             self.open_powertoys_run.wait()
+            self.target_process_starting = False
             app = pywinauto.Application(backend="uia").connect(handle=hwnd)
             try:
                 self.target_window = app.window(handle=hwnd)
                 self.target_window.wait("ready", timeout=3)
-            except TimeoutError:
+            except timings.TimeoutError:
                 logger.debug("线程进入休眠")
                 self.buffers.clear()
                 self.is_listening = False
-                self.target_process_starting = False
 
             if CONFIG.get("settings.autoFocus", True):
                 try:
