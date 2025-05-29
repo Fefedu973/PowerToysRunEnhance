@@ -828,6 +828,8 @@ class SettingInterface(QWidget):
         )
         inputCard.configUpdated.connect(CONFIG.on_config_updated)
         self.vBoxLayout.addWidget(inputCard)
+        # 暂时无用的 waitTimeSetCard
+        """
         waitTimeSetCard = WaitTimeSetCard(
             title=self.tr("Wait Time"),
             content=self.tr("Time to wait for the search window to fully close"),
@@ -838,6 +840,7 @@ class SettingInterface(QWidget):
         )
         waitTimeSetCard.configUpdated.connect(CONFIG.on_config_updated)
         self.vBoxLayout.addWidget(waitTimeSetCard)
+        """
         shortcutCard = ShortcutCard(
             title=self.tr("Target Process Shortcut"),
             content=self.tr("Shortcut to invoke Target Process."),
